@@ -1,5 +1,6 @@
 {
-  "buildCommand": "echo 'Static only'",
+  "buildCommand": "exit 0",
   "outputDirectory": ".",
-  "public": true
+  "public": true,
+  "trailingSlash": false
 }
