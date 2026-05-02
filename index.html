@@ -40,13 +40,14 @@ function switchTab(tabName, button) {
   button.classList.add('active');
 }
 
-// Load HTML files
-fetch('/forestguard-landing.html').then(r => r.text()).then(html => {
+// Load HTML files with correct path for GitHub Pages
+const basePath = window.location.pathname.includes('forestguard-alpha') ? '/forestguard-alpha' : '';
+fetch(basePath + '/forestguard-landing.html').then(r => r.text()).then(html => {
   document.getElementById('landing').innerHTML = html;
-});
-fetch('/forestguard-dashboard.html').then(r => r.text()).then(html => {
+}).catch(e => console.error('Error loading landing:', e));
+fetch(basePath + '/forestguard-dashboard.html').then(r => r.text()).then(html => {
   document.getElementById('dashboard').innerHTML = html;
-});
+}).catch(e => console.error('Error loading dashboard:', e));
 </script>
 </body>
 </html>
