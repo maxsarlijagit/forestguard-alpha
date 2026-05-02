@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm ci"
+  "buildCommand": "echo 'Static HTML deployment'",
+  "outputDirectory": ".",
+  "trailingSlash": false
 }
