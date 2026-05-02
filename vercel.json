@@ -1,3 +1,6 @@
 {
-  "public": true
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "public": true,
+  "cleanUrls": true
 }

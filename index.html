@@ -22,6 +22,7 @@
   .tab-button.active { color: #82c69b; border-bottom-color: #82c69b; }
   .content { display: none; }
   .content.active { display: block; }
+  .error { color: #ff6b35; padding: 2rem; text-align: center; }
 </style>
 </head>
 <body>
@@ -40,14 +41,22 @@ function switchTab(tabName, button) {
   button.classList.add('active');
 }
 
-// Load HTML files with correct path for GitHub Pages
-const basePath = window.location.pathname.includes('forestguard-alpha') ? '/forestguard-alpha' : '';
-fetch(basePath + '/forestguard-landing.html').then(r => r.text()).then(html => {
-  document.getElementById('landing').innerHTML = html;
-}).catch(e => console.error('Error loading landing:', e));
-fetch(basePath + '/forestguard-dashboard.html').then(r => r.text()).then(html => {
-  document.getElementById('dashboard').innerHTML = html;
-}).catch(e => console.error('Error loading dashboard:', e));
+// Detect if running on GitHub Pages or Vercel
+const isGitHubPages = window.location.hostname.includes('github.io');
+const basePath = isGitHubPages ? '/forestguard-alpha' : '';
+
+// Load HTML files
+Promise.all([
+  fetch(basePath + '/forestguard-landing.html').then(r => r.text()),
+  fetch(basePath + '/forestguard-dashboard.html').then(r => r.text())
+]).then(([landing, dashboard]) => {
+  document.getElementById('landing').innerHTML = landing;
+  document.getElementById('dashboard').innerHTML = dashboard;
+}).catch(error => {
+  console.error('Error loading content:', error);
+  document.getElementById('landing').innerHTML = '<div class="error">⚠️ Error loading landing page</div>';
+  document.getElementById('dashboard').innerHTML = '<div class="error">⚠️ Error loading dashboard</div>';
+});
 </script>
 </body>
 </html>
