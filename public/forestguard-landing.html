@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForestGuard — Detect. Respond. Save the world.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=JetBrains+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090a;
+    --bg-soft: #0d1112;
+    --ink: #e8efe9;
+    --ink-dim: #8a9489;
+    --ink-faint: #4a544c;
+    --moss: #4a7c59;
+    --leaf: #82c69b;
+    --ember: #ff6b35;
+    --warning: #ffb347;
+    --char: #1a1f1c;
+    --gold: #d4a017;
+    --sky: #5bb8ef;
+    --line: rgba(232, 239, 233, 0.08);
+    --glass: rgba(232, 239, 233, 0.03);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E");
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 20px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(7, 9, 10, 0.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px;
+    letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--leaf), var(--moss) 60%, var(--char));
+    box-shadow: 0 0 20px rgba(130, 198, 155, 0.4);
+  }
+  .nav-links { display: flex; gap: 32px; font-size: 13px; color: var(--ink-dim); }
+  .nav-links a { color: inherit; text-decoration: none; transition: color 0.3s; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    padding: 10px 20px; border: 1px solid var(--line); border-radius: 100px;
+    font-size: 12px; color: var(--ink); background: var(--glass); cursor: pointer;
+    transition: all 0.3s; font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .nav-cta:hover { background: var(--leaf); color: var(--bg); border-color: var(--leaf); }
+  
+  /* HERO */
+  .hero {
+    min-height: 100vh; padding: 140px 48px 80px;
+    position: relative; display: flex; flex-direction: column; justify-content: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 60% at 70% 40%, rgba(74, 124, 89, 0.15), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 20% 80%, rgba(255, 107, 53, 0.08), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 100% 80% at 50% 50%, black 30%, transparent 80%);
+    pointer-events: none; opacity: 0.5;
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 1280px; margin: 0 auto; width: 100%; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-dim); letter-spacing: 0.15em; text-transform: uppercase;
+    margin-bottom: 32px; padding: 8px 16px;
+    border: 1px solid var(--line); border-radius: 100px; background: var(--glass);
+  }
+  .eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--leaf); box-shadow: 0 0 12px var(--leaf);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  
+  .hero-badges { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border: 1px solid var(--line); border-radius: 100px;
+    background: var(--glass); font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--ink-dim); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .badge-icon { width: 6px; height: 6px; border-radius: 50%; background: var(--sky); box-shadow: 0 0 8px var(--sky); }
+  .badge-icon.green { background: var(--leaf); box-shadow: 0 0 8px var(--leaf); }
+  .badge-icon.gold { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+  
+  h1 {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: clamp(48px, 8vw, 120px); line-height: 0.95;
+    letter-spacing: -0.04em; margin-bottom: 32px; max-width: 1100px;
+  }
+  h1 em {
+    font-style: italic; font-weight: 400;
+    background: linear-gradient(135deg, var(--leaf) 0%, var(--moss) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-sub {
+    font-size: clamp(16px, 1.4vw, 20px); color: var(--ink-dim);
+    max-width: 640px; margin-bottom: 48px; line-height: 1.6;
+  }
+  .hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    padding: 18px 32px; background: var(--ink); color: var(--bg);
+    border: none; border-radius: 100px; font-family: 'Manrope', sans-serif;
+    font-weight: 500; font-size: 14px; cursor: pointer; transition: transform 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-secondary {
+    padding: 18px 32px; background: transparent; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 100px;
+    font-family: 'Manrope', sans-serif; font-size: 14px; cursor: pointer;
+    transition: all 0.3s; display: flex; align-items: center; gap: 10px;
+  }
+  .btn-secondary:hover { border-color: var(--leaf); color: var(--leaf); }
+  
+  .hero-stats {
+    position: absolute; bottom: 80px; right: 48px;
+    display: flex; gap: 60px; z-index: 2;
+  }
+  .stat { text-align: right; }
+  .stat-num {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: 44px; letter-spacing: -0.03em; color: var(--leaf); line-height: 1;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--ink-dim); letter-spacing: 0.15em;
+    text-transform: uppercase; margin-top: 8px;
+  }
+  
+  /* PRODUCTS */
+  .products {
+    padding: 160px 48px;
+    background: linear-gradient(180deg, var(--bg) 0%, #0a0d0a 100%);
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--leaf); letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::before { content: ''; width: 32px; height: 1px; background: var(--leaf); }
+  .section-title {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: clamp(40px, 5vw, 72px); line-height: 1;
+    letter-spacing: -0.03em; margin-bottom: 24px; max-width: 900px;
+  }
+  .section-sub {
+    font-size: 18px; color: var(--ink-dim);
+    max-width: 640px; line-height: 1.6; margin-bottom: 80px;
+  }
+  .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .product-card {
+    border: 1px solid var(--line); border-radius: 24px;
+    padding: 48px 40px; background: var(--glass);
+    position: relative; overflow: hidden; transition: all 0.4s;
+  }
+  .product-card.sentinel {
+    background: radial-gradient(ellipse at top right, rgba(130, 198, 155, 0.08) 0%, transparent 50%), var(--glass);
+  }
+  .product-card.responder {
+    background: radial-gradient(ellipse at top right, rgba(255, 107, 53, 0.08) 0%, transparent 50%), var(--glass);
+  }
+  .product-card:hover { transform: translateY(-6px); border-color: rgba(130, 198, 155, 0.3); }
+  .product-card.responder:hover { border-color: rgba(255, 107, 53, 0.3); }
+  
+  .product-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 24px;
+  }
+  .sentinel .product-tag { background: rgba(130, 198, 155, 0.1); color: var(--leaf); border: 1px solid rgba(130, 198, 155, 0.3); }
+  .responder .product-tag { background: rgba(255, 107, 53, 0.1); color: var(--ember); border: 1px solid rgba(255, 107, 53, 0.3); }
+  
+  .product-name {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: 56px; letter-spacing: -0.04em; line-height: 1; margin-bottom: 16px;
+  }
+  .product-name em { font-style: italic; font-weight: 400; }
+  .sentinel .product-name em { color: var(--leaf); }
+  .responder .product-name em { color: var(--ember); }
+  
+  .product-tagline { font-size: 16px; color: var(--ink-dim); margin-bottom: 32px; line-height: 1.5; }
+  .product-features { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+  .feature-item { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--ink); }
+  .feature-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; color: var(--leaf); }
+  .responder .feature-icon { color: var(--ember); }
+  
+  /* SENTINEL DETAIL */
+  .sentinel-detail {
+    padding: 200px 48px;
+    background: radial-gradient(ellipse at center, #0f1311 0%, var(--bg) 70%);
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .product-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--leaf); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 32px;
+  }
+  .product-title-big {
+    font-family: 'Fraunces', serif; font-weight: 200;
+    font-size: clamp(56px, 9vw, 128px); line-height: 0.95;
+    letter-spacing: -0.05em; margin-bottom: 24px;
+  }
+  .product-title-big em { font-style: italic; font-weight: 300; color: var(--leaf); }
+  .product-tagline-big {
+    font-size: 22px; color: var(--ink-dim);
+    max-width: 720px; margin: 0 auto 100px; font-weight: 300;
+  }
+  
+  .device-render {
+    position: relative; width: 360px; height: 540px;
+    margin: 0 auto 120px; perspective: 1500px;
+  }
+  .device-glow {
+    position: absolute; inset: -100px;
+    background: radial-gradient(circle, rgba(130, 198, 155, 0.2) 0%, transparent 60%);
+    filter: blur(40px); animation: glow-pulse 4s ease-in-out infinite;
+  }
+  @keyframes glow-pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
+  
+  .device-body {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotateY(-15deg) rotateX(5deg);
+    width: 200px; height: 360px; border-radius: 100px;
+    background: linear-gradient(135deg, #2a2f2c 0%, #1a1f1c 30%, #0d1110 70%, #1a1f1c 100%);
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -2px 4px rgba(0,0,0,0.5), 0 40px 80px rgba(0,0,0,0.6);
+    transform-style: preserve-3d; animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(-50%, -50%) rotateY(-15deg) rotateX(5deg) translateZ(0); }
+    50% { transform: translate(-50%, -50%) rotateY(-12deg) rotateX(3deg) translateZ(20px); }
+  }
+  .device-top {
+    position: absolute; top: 20px; left: 50%;
+    transform: translateX(-50%); width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3a4540 0%, #1a1f1c 60%, #0a0d0c 100%);
+    box-shadow: inset 0 4px 8px rgba(255,255,255,0.05), inset 0 -4px 8px rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .device-lens {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, rgba(130, 198, 155, 0.4) 0%, rgba(74, 124, 89, 0.3) 30%, rgba(0, 0, 0, 0.95) 70%);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 30px rgba(130, 198, 155, 0.4);
+    position: relative;
+  }
+  .device-lens::after {
+    content: ''; position: absolute; top: 15%; left: 20%;
+    width: 30%; height: 30%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.6), transparent);
+  }
+  .device-led {
+    position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 8px; border-radius: 50%; background: var(--leaf);
+    box-shadow: 0 0 20px var(--leaf), 0 0 40px var(--leaf);
+    animation: led-blink 2s infinite;
+  }
+  @keyframes led-blink { 0%, 90%, 100% { opacity: 1; } 95% { opacity: 0.3; } }
+  .device-sensors {
+    position: absolute; top: 220px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 100px; display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 8px;
+    padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.4);
+  }
+  .sensor-dot { background: rgba(130, 198, 155, 0.15); border-radius: 4px; border: 1px solid rgba(130, 198, 155, 0.2); }
+  .device-base {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 30px; border-radius: 8px;
+    background: linear-gradient(180deg, #1a2238 0%, #0a1020 100%),
+                repeating-linear-gradient(90deg, transparent, transparent 18px, rgba(255,255,255,0.05) 18px, rgba(255,255,255,0.05) 19px);
+    background-blend-mode: overlay;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
+  }
+  
+  .satellite {
+    position: absolute; top: 30px; right: -40px;
+    width: 80px; height: 80px; z-index: 5;
+    animation: sat-float 4s ease-in-out infinite;
+  }
+  @keyframes sat-float { 0%, 100% { transform: translateY(0) rotate(-15deg); } 50% { transform: translateY(-12px) rotate(-12deg); } }
+  .satellite svg { width: 100%; height: 100%; filter: drop-shadow(0 0 12px rgba(91, 184, 239, 0.5)); }
+  .beam {
+    position: absolute; top: 100px; right: 30px;
+    width: 2px; height: 200px;
+    background: linear-gradient(180deg, rgba(91, 184, 239, 0.5) 0%, rgba(91, 184, 239, 0) 100%);
+    transform: rotate(20deg); transform-origin: top;
+    animation: beam-pulse 2s infinite;
+  }
+  @keyframes beam-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+  
+  .device-spec {
+    position: absolute; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--ink-dim); letter-spacing: 0.15em;
+    text-transform: uppercase; display: flex; align-items: center; gap: 12px;
+  }
+  .device-spec.left { right: calc(50% + 140px); text-align: right; flex-direction: row; }
+  .device-spec.right { left: calc(50% + 140px); flex-direction: row-reverse; text-align: left; }
+  .device-spec .line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--ink-dim), transparent); }
+  .device-spec .label { color: var(--leaf); font-weight: 500; }
+  .device-spec .label.sky { color: var(--sky); }
+  .spec-1 { top: 60px; }
+  .spec-2 { top: 160px; }
+  .spec-3 { top: 260px; }
+  .spec-4 { top: 360px; }
+  
+  .device-specs {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--line);
+    border: 1px solid var(--line); margin: 80px auto 0;
+    max-width: 1280px;
+  }
+  .spec-cell { background: var(--bg); padding: 40px 32px; text-align: left; }
+  .spec-icon { width: 32px; height: 32px; margin-bottom: 24px; color: var(--leaf); }
+  .spec-name {
+    font-family: 'Fraunces', serif; font-weight: 300;
+    font-size: 24px; letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .spec-detail {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-dim); letter-spacing: 0.05em; line-height: 1.6;
+  }
+  
+  /* CAMERAS */
+  .cameras { padding: 160px 48px; background: var(--bg); }
+  .cameras-header { max-width: 1280px; margin: 0 auto 80px; }
+  .camera-modes {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .camera-mode {
+    border: 1px solid var(--line); border-radius: 20px;
+    overflow: hidden; background: var(--bg-soft); transition: transform 0.3s;
+  }
+  .camera-mode:hover { transform: translateY(-4px); }
+  .camera-preview { aspect-ratio: 4/3; position: relative; overflow: hidden; }
+  
+  .preview-rgb {
+    background: 
+      radial-gradient(ellipse at 30% 40%, rgba(74, 124, 89, 0.6), transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(74, 124, 89, 0.5), transparent 50%),
+      linear-gradient(180deg, #2d4a3a 0%, #1a3326 50%, #0d1f15 100%);
+  }
+  .preview-rgb::before {
+    content: ''; position: absolute; inset: 0;
+    background: 
+      radial-gradient(circle at 25% 35%, rgba(130, 198, 155, 0.4), transparent 6%),
+      radial-gradient(circle at 60% 30%, rgba(130, 198, 155, 0.4), transparent 5%),
+      radial-gradient(circle at 80% 50%, rgba(130, 198, 155, 0.4), transparent 6%),
+      radial-gradient(circle at 35% 65%, rgba(130, 198, 155, 0.4), transparent 7%),
+      radial-gradient(circle at 70% 70%, rgba(130, 198, 155, 0.4), transparent 5%);
+    filter: blur(2px);
+  }
+  
+  .preview-ir { background: linear-gradient(180deg, #1a2530 0%, #0a1218 100%); }
+  .preview-ir::before {
+    content: ''; position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse at 30% 40%, rgba(91, 184, 239, 0.3), transparent 40%),
+      radial-gradient(ellipse at 70% 60%, rgba(91, 184, 239, 0.2), transparent 40%);
+    background-image: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(91, 184, 239, 0.04) 2px, rgba(91, 184, 239, 0.04) 3px);
+  }
+  
+  .preview-thermal {
+    background: radial-gradient(ellipse at 60% 60%, rgba(255, 107, 53, 0.8) 0%, rgba(255, 179, 71, 0.6) 15%, rgba(74, 124, 89, 0.4) 35%, rgba(40, 80, 120, 0.6) 60%, #1a1a2e 100%);
+  }
+  .preview-thermal::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 60% 60%, rgba(255, 255, 255, 0.4), transparent 8%);
+  }
+  
+  .camera-hud {
+    position: absolute; inset: 0; pointer-events: none;
+    padding: 12px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .hud-top, .hud-bottom {
+    display: flex; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.7);
+  }
+  .hud-bottom { align-items: flex-end; color: rgba(255, 255, 255, 0.6); }
+  .hud-tag {
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+  }
+  .crosshair {
+    position: absolute; top: 60%; left: 60%;
+    transform: translate(-50%, -50%); width: 30px; height: 30px;
+  }
+  .crosshair::before, .crosshair::after { content: ''; position: absolute; background: rgba(255, 255, 255, 0.5); }
+  .crosshair::before { width: 100%; height: 1px; top: 50%; transform: translateY(-50%); }
+  .crosshair::after { width: 1px; height: 100%; left: 50%; transform: translateX(-50%); }
+  .thermal-temp {
+    position: absolute; top: 60%; left: 60%;
+    transform: translate(20px, -50%);
+    background: rgba(0, 0, 0, 0.7); color: var(--ember);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    font-weight: 600; padding: 3px 8px; border-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+  .camera-info { padding: 24px; }
+  .camera-mode-name {
+    font-family: 'Fraunces', serif; font-weight: 400;
+    font-size: 20px; letter-spacing: -0.01em; margin-bottom: 8px;
+  }
+  .camera-mode-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.5; margin-bottom: 16px; }
+  .camera-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--leaf);
+  }
+  .camera-tag .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--leaf); box-shadow: 0 0 6px var(--leaf);
+  }
+  
+  /* FOREST TOP-DOWN */
+  .forest-network {
+    padding: 200px 48px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .forest-network-header {
+    max-width: 1280px;
+    margin: 0 auto 80px;
+    text-align: center;
+  }
+  .forest-network-header .section-label {
+    justify-content: center;
+  }
+  .forest-network-header .section-label::after {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--leaf);
+  }
+  .forest-network-header .section-title {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .forest-network-header .section-sub {
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0;
+  }
+  
+  .forest-canvas {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    aspect-ratio: 16/10;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(74, 124, 89, 0.25), transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(74, 124, 89, 0.3), transparent 55%),
+      radial-gradient(ellipse at 85% 20%, rgba(74, 124, 89, 0.2), transparent 45%),
+      radial-gradient(ellipse at 30% 80%, rgba(74, 124, 89, 0.22), transparent 50%),
+      linear-gradient(135deg, #0a1410 0%, #0d1f15 50%, #0a1410 100%);
+  }
+  
+  /* Topographic contour lines */
+  .forest-canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 30% 20% at 25% 35%, transparent 48%, rgba(130, 198, 155, 0.08) 49%, transparent 51%),
+      radial-gradient(ellipse 25% 18% at 25% 35%, transparent 48%, rgba(130, 198, 155, 0.06) 49%, transparent 51%),
+      radial-gradient(ellipse 18% 13% at 25% 35%, transparent 48%, rgba(130, 198, 155, 0.05) 49%, transparent 51%),
+      radial-gradient(ellipse 35% 25% at 70% 65%, transparent 48%, rgba(130, 198, 155, 0.07) 49%, transparent 51%),
+      radial-gradient(ellipse 28% 20% at 70% 65%, transparent 48%, rgba(130, 198, 155, 0.06) 49%, transparent 51%),
+      radial-gradient(ellipse 20% 14% at 70% 65%, transparent 48%, rgba(130, 198, 155, 0.05) 49%, transparent 51%);
+    pointer-events: none;
+  }
+  
+  /* Tree clusters - subtle texture */
+  .forest-canvas::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 8% 22%, rgba(130, 198, 155, 0.18) 0, transparent 1.5%),
+      radial-gradient(circle at 14% 18%, rgba(130, 198, 155, 0.15) 0, transparent 1.2%),
+      radial-gradient(circle at 22% 28%, rgba(130, 198, 155, 0.16) 0, transparent 1.4%),
+      radial-gradient(circle at 11% 45%, rgba(130, 198, 155, 0.17) 0, transparent 1.3%),
+      radial-gradient(circle at 28% 52%, rgba(130, 198, 155, 0.15) 0, transparent 1.4%),
+      radial-gradient(circle at 38% 38%, rgba(130, 198, 155, 0.16) 0, transparent 1.2%),
+      radial-gradient(circle at 45% 65%, rgba(130, 198, 155, 0.17) 0, transparent 1.3%),
+      radial-gradient(circle at 55% 25%, rgba(130, 198, 155, 0.15) 0, transparent 1.4%),
+      radial-gradient(circle at 62% 48%, rgba(130, 198, 155, 0.16) 0, transparent 1.3%),
+      radial-gradient(circle at 75% 35%, rgba(130, 198, 155, 0.17) 0, transparent 1.2%),
+      radial-gradient(circle at 82% 58%, rgba(130, 198, 155, 0.15) 0, transparent 1.4%),
+      radial-gradient(circle at 88% 28%, rgba(130, 198, 155, 0.16) 0, transparent 1.3%),
+      radial-gradient(circle at 18% 75%, rgba(130, 198, 155, 0.15) 0, transparent 1.4%),
+      radial-gradient(circle at 35% 82%, rgba(130, 198, 155, 0.17) 0, transparent 1.3%),
+      radial-gradient(circle at 58% 80%, rgba(130, 198, 155, 0.15) 0, transparent 1.4%),
+      radial-gradient(circle at 78% 78%, rgba(130, 198, 155, 0.16) 0, transparent 1.3%);
+    pointer-events: none;
+  }
+  
+  /* Sensor nodes */
+  .sensor-node {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    z-index: 5;
+  }
+  .sensor-node .core {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--leaf);
+    box-shadow: 0 0 12px var(--leaf), 0 0 0 3px rgba(130, 198, 155, 0.2);
+  }
+  .sensor-node.warning .core {
+    background: var(--warning);
+    box-shadow: 0 0 14px var(--warning), 0 0 0 3px rgba(255, 179, 71, 0.25);
+  }
+  .sensor-node.alert .core {
+    background: var(--ember);
+    box-shadow: 0 0 18px var(--ember), 0 0 0 4px rgba(255, 107, 53, 0.3);
+  }
+  
+  /* Coverage rings */
+  .sensor-node .ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(130, 198, 155, 0.25);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    pointer-events: none;
+  }
+  .sensor-node.warning .ring { border-color: rgba(255, 179, 71, 0.3); }
+  .sensor-node.alert .ring { border-color: rgba(255, 107, 53, 0.4); }
+  
+  /* Pulse ripples for active nodes */
+  .sensor-node .pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid var(--leaf);
+    animation: node-pulse 2.5s infinite;
+    pointer-events: none;
+  }
+  .sensor-node.warning .pulse-ring { border-color: var(--warning); animation-duration: 1.8s; }
+  .sensor-node.alert .pulse-ring { border-color: var(--ember); animation-duration: 1.2s; }
+  
+  @keyframes node-pulse {
+    0% { width: 12px; height: 12px; opacity: 1; }
+    100% { width: 100px; height: 100px; opacity: 0; }
+  }
+  
+  /* Node labels */
+  .sensor-node .label {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    background: rgba(7, 9, 10, 0.8);
+    padding: 2px 6px;
+    border-radius: 3px;
+    backdrop-filter: blur(4px);
+  }
+  .sensor-node.alert .label { color: var(--ember); }
+  .sensor-node.warning .label { color: var(--warning); }
+  
+  /* Fire incident */
+  .fire-incident {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    z-index: 6;
+  }
+  .fire-glow {
+    position: absolute;
+    inset: -16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--ember) 0%, transparent 60%);
+    filter: blur(8px);
+    animation: fire-pulse 1.2s infinite;
+  }
+  @keyframes fire-pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  .fire-icon {
+    position: absolute;
+    inset: 0;
+    color: var(--ember);
+    filter: drop-shadow(0 0 8px var(--ember));
+  }
+  .fire-rings {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--ember);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: fire-ring 1.8s infinite;
+  }
+  @keyframes fire-ring {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+  }
+  
+  /* Triangulation lines */
+  .triangulation {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+  }
+  .triangulation svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Map metrics overlay */
+  .map-metrics {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: rgba(7, 9, 10, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 20px;
+    z-index: 10;
+    min-width: 220px;
+  }
+  .map-metrics .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .map-metrics .metric-row + .metric-row {
+    border-top: 1px solid var(--line);
+  }
+  .map-metrics .metric-label {
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .map-metrics .metric-value {
+    color: var(--leaf);
+    font-weight: 500;
+  }
+  .map-metrics .metric-value.warning { color: var(--warning); }
+  .map-metrics .metric-value.alert { color: var(--ember); }
+  
+  .map-title {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 10;
+  }
+  .map-title-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-faint);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .map-title-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  
+  /* Map legend */
+  .map-legend {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    display: flex;
+    gap: 20px;
+    background: rgba(7, 9, 10, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 8px 16px;
+    z-index: 10;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-dim);
+    letter-spacing: 0.05em;
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .legend-dot.ok { background: var(--leaf); box-shadow: 0 0 6px var(--leaf); }
+  .legend-dot.warn { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+  .legend-dot.fire { background: var(--ember); box-shadow: 0 0 6px var(--ember); }
+  
+  /* Compass */
+  .compass {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: rgba(7, 9, 10, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  .compass-arrow {
+    width: 2px;
+    height: 24px;
+    background: linear-gradient(180deg, var(--ember) 0%, var(--ember) 50%, var(--ink-dim) 50%, var(--ink-dim) 100%);
+    position: relative;
+  }
+  .compass-arrow::before {
+    content: 'N';
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ember);
+    letter-spacing: 0.1em;
+  }
+  
+  /* RESPONDER */
+  .responder-section {
+    padding: 200px 48px;
+    background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.05) 0%, transparent 60%), var(--bg);
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .responder-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ember); letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 32px; display: inline-flex; align-items: center; gap: 12px;
+    padding: 8px 16px; border: 1px solid rgba(255, 107, 53, 0.2);
+    border-radius: 100px; background: rgba(255, 107, 53, 0.05);
+  }
+  .responder-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
+  .responder-title {
+    font-family: 'Fraunces', serif; font-weight: 200;
+    font-size: clamp(56px, 9vw, 128px); line-height: 0.95;
+    letter-spacing: -0.05em; margin-bottom: 24px;
+  }
+  .responder-title em { font-style: italic; font-weight: 300; color: var(--ember); }
+  .responder-tagline {
+    font-size: 22px; color: var(--ink-dim);
+    max-width: 720px; margin: 0 auto 80px; font-weight: 300;
+  }
+  
+  .drone-scene {
+    position: relative; max-width: 1100px; height: 480px;
+    margin: 0 auto 120px; border-radius: 24px; overflow: hidden;
+    background: 
+      radial-gradient(ellipse at 30% 100%, rgba(74, 124, 89, 0.3), transparent 50%),
+      radial-gradient(ellipse at 70% 100%, rgba(255, 107, 53, 0.15), transparent 50%),
+      linear-gradient(180deg, #050708 0%, #0a1410 100%);
+    border: 1px solid var(--line);
+  }
+  .drone-scene::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: 
+      radial-gradient(1px 1px at 20% 20%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 60% 30%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 40% 25%, rgba(255,255,255,0.25), transparent),
+      radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.2), transparent);
+  }
+  .ground {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+    background: 
+      radial-gradient(ellipse 200px 80px at 15%, rgba(74, 124, 89, 0.5), transparent 70%),
+      radial-gradient(ellipse 250px 90px at 35%, rgba(74, 124, 89, 0.6), transparent 70%),
+      radial-gradient(ellipse 280px 100px at 60%, rgba(74, 124, 89, 0.7), transparent 70%),
+      radial-gradient(ellipse 220px 85px at 85%, rgba(74, 124, 89, 0.5), transparent 70%),
+      linear-gradient(180deg, transparent 0%, rgba(10, 20, 16, 1) 100%);
+  }
+  
+  .base-station {
+    position: absolute; bottom: 18%; left: 15%;
+    width: 70px; height: 90px; z-index: 5;
+  }
+  .base-platform {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 70px; height: 14px; border-radius: 8px;
+    background: linear-gradient(180deg, #2a2f2c 0%, #0d1110 100%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+  .base-tower {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    width: 12px; height: 50px;
+    background: linear-gradient(90deg, #1a1f1c, #2a2f2c, #1a1f1c);
+  }
+  .base-top {
+    position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%);
+    width: 50px; height: 26px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #3a4540, #1a1f1c 70%);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+  }
+  .base-light {
+    position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%);
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ember); box-shadow: 0 0 16px var(--ember);
+    animation: led-blink 1.5s infinite;
+  }
+  .base-label {
+    position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--ember); letter-spacing: 0.15em; text-transform: uppercase;
+    white-space: nowrap; background: rgba(7,9,10,0.7); padding: 2px 8px; border-radius: 4px;
+  }
+  
+  .drone {
+    position: absolute; top: 30%; left: 55%;
+    width: 80px; height: 80px; z-index: 10;
+    animation: drone-fly 6s ease-in-out infinite;
+  }
+  @keyframes drone-fly {
+    0%, 100% { transform: translate(0, 0) rotate(-2deg); }
+    25% { transform: translate(20px, -10px) rotate(2deg); }
+    50% { transform: translate(40px, 0) rotate(-1deg); }
+    75% { transform: translate(20px, -8px) rotate(3deg); }
+  }
+  .drone-body {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 30px; height: 18px; border-radius: 6px;
+    background: linear-gradient(180deg, #2a2f2c 0%, #0d1110 100%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  }
+  .drone-arm {
+    position: absolute; top: 50%; left: 50%;
+    width: 28px; height: 2px; background: #1a1f1c;
+    transform-origin: left center;
+  }
+  .drone-arm.tl { transform: translate(-100%, -50%) rotate(-30deg); }
+  .drone-arm.tr { transform: translate(0%, -50%) rotate(30deg); }
+  .drone-arm.bl { transform: translate(-100%, -50%) rotate(-150deg); }
+  .drone-arm.br { transform: translate(0%, -50%) rotate(150deg); }
+  .drone-rotor {
+    position: absolute; width: 16px; height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(91, 184, 239, 0.4), transparent 60%);
+    border: 1px solid rgba(91, 184, 239, 0.3);
+  }
+  .drone-rotor::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 1px solid rgba(91, 184, 239, 0.3);
+    animation: rotor-spin 0.3s linear infinite;
+  }
+  @keyframes rotor-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .drone-rotor.tl { top: 8px; left: 8px; }
+  .drone-rotor.tr { top: 8px; right: 8px; }
+  .drone-rotor.bl { bottom: 8px; left: 8px; }
+  .drone-rotor.br { bottom: 8px; right: 8px; }
+  .drone-light {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--ember); box-shadow: 0 0 12px var(--ember);
+  }
+  
+  .trajectory {
+    position: absolute; top: 38%; left: 65%;
+    width: 100px; height: 200px; z-index: 6;
+  }
+  .trajectory svg { width: 100%; height: 100%; }
+  
+  .target {
+    position: absolute; bottom: 22%; left: 70%;
+    width: 50px; height: 50px; z-index: 5;
+  }
+  .target-glow {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle, var(--ember) 0%, transparent 60%);
+    filter: blur(8px); animation: target-pulse 1s infinite;
+  }
+  @keyframes target-pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+  .target-rings {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 30px; height: 30px;
+    border: 2px solid var(--ember); border-radius: 50%;
+    animation: target-ring 1.5s infinite;
+  }
+  @keyframes target-ring {
+    0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+  }
+  
+  .scene-label {
+    position: absolute; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(7, 9, 10, 0.85); backdrop-filter: blur(10px);
+    padding: 8px 12px; border-radius: 6px;
+    border: 1px solid var(--line); z-index: 15;
+  }
+  .scene-label-1 { top: 24px; left: 24px; color: var(--ember); }
+  .scene-label-2 { top: 24px; right: 24px; color: var(--leaf); }
+  .scene-label-2 div { margin-top: 2px; color: var(--ink-dim); }
+  
+  .responder-specs {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    margin: 80px auto 40px; max-width: 1280px;
+  }
+  .responder-specs .spec-icon { color: var(--ember); }
+  
+  .phase-badge {
+    display: inline-block; margin-top: 24px;
+    padding: 8px 16px; border-radius: 100px;
+    background: rgba(255, 179, 71, 0.1); border: 1px solid rgba(255, 179, 71, 0.3);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--warning); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  
+  /* ARCHITECTURE */
+  .architecture {
+    padding: 160px 48px;
+    background: linear-gradient(180deg, var(--bg) 0%, #0a0d0a 50%, var(--bg) 100%);
+  }
+  .arch-diagram {
+    max-width: 1280px; margin: 80px auto 0;
+    position: relative; aspect-ratio: 16/9;
+    border-radius: 24px; border: 1px solid var(--line);
+    background: 
+      radial-gradient(ellipse at top, rgba(91, 184, 239, 0.05), transparent 60%),
+      radial-gradient(ellipse at bottom left, rgba(74, 124, 89, 0.08), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(255, 107, 53, 0.05), transparent 60%),
+      linear-gradient(180deg, #050908 0%, #0a1410 100%);
+    overflow: hidden;
+  }
+  .arch-layer {
+    position: absolute; left: 32px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--ink-faint); letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .arch-layer.l1 { top: 32px; }
+  .arch-layer.l2 { top: 32%; }
+  .arch-layer.l3 { top: 60%; }
+  .arch-layer.l4 { bottom: 32px; }
+  
+  .arch-satellite {
+    position: absolute; top: 60px; left: 50%;
+    transform: translateX(-50%); width: 60px; height: 60px;
+  }
+  .arch-satellite svg {
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 0 16px rgba(91, 184, 239, 0.6));
+  }
+  .arch-label-text {
+    position: absolute; top: 130px; left: 50%; transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--sky); letter-spacing: 0.15em;
+  }
+  .arch-cloud {
+    position: absolute; top: 30%; left: 50%;
+    transform: translateX(-50%); padding: 12px 24px;
+    border: 1px solid rgba(91, 184, 239, 0.3); border-radius: 100px;
+    background: rgba(91, 184, 239, 0.05);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--sky); letter-spacing: 0.1em; white-space: nowrap;
+  }
+  .arch-nodes {
+    position: absolute; top: 58%; left: 50%;
+    transform: translateX(-50%); display: flex; gap: 80px;
+  }
+  .arch-node {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--leaf);
+    box-shadow: 0 0 16px var(--leaf), 0 0 0 4px rgba(130, 198, 155, 0.2);
+    position: relative;
+  }
+  .arch-node::after {
+    content: ''; position: absolute; inset: -4px;
+    border-radius: 50%; border: 1px solid var(--leaf);
+    opacity: 0; animation: arch-ripple 3s infinite;
+  }
+  @keyframes arch-ripple { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(3); opacity: 0; } }
+  
+  .arch-forest {
+    position: absolute; bottom: 60px; left: 0; right: 0; height: 50px;
+    background: 
+      radial-gradient(ellipse 80px 30px at 10%, rgba(74, 124, 89, 0.6), transparent),
+      radial-gradient(ellipse 100px 40px at 25%, rgba(74, 124, 89, 0.7), transparent),
+      radial-gradient(ellipse 90px 35px at 40%, rgba(74, 124, 89, 0.6), transparent),
+      radial-gradient(ellipse 110px 40px at 55%, rgba(74, 124, 89, 0.7), transparent),
+      radial-gradient(ellipse 95px 38px at 70%, rgba(74, 124, 89, 0.6), transparent),
+      radial-gradient(ellipse 100px 40px at 85%, rgba(74, 124, 89, 0.65), transparent);
+  }
+  .arch-connections { position: absolute; inset: 0; pointer-events: none; }
+  
+  /* IMPACT */
+  .impact {
+    padding: 160px 48px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(74, 124, 89, 0.1) 0%, transparent 60%), var(--bg);
+    text-align: center;
+  }
+  .impact-num {
+    font-family: 'Fraunces', serif; font-weight: 200;
+    font-size: clamp(80px, 14vw, 200px); letter-spacing: -0.05em; line-height: 1;
+    background: linear-gradient(135deg, var(--leaf) 0%, var(--moss) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 24px;
+  }
+  .impact-text {
+    font-family: 'Fraunces', serif; font-weight: 300; font-style: italic;
+    font-size: clamp(24px, 3vw, 36px); letter-spacing: -0.02em;
+    color: var(--ink); max-width: 800px; margin: 0 auto 16px; line-height: 1.3;
+  }
+  .impact-detail { font-size: 16px; color: var(--ink-dim); max-width: 600px; margin: 0 auto; }
+  
+  /* CTA */
+  .cta { padding: 200px 48px; text-align: center; border-top: 1px solid var(--line); }
+  .cta-title {
+    font-family: 'Fraunces', serif; font-weight: 200;
+    font-size: clamp(56px, 8vw, 120px); letter-spacing: -0.05em;
+    line-height: 0.95; margin-bottom: 32px;
+  }
+  .cta-title em { font-style: italic; color: var(--leaf); }
+  .cta-sub { font-size: 18px; color: var(--ink-dim); max-width: 540px; margin: 0 auto 48px; }
+  .cta-btn {
+    padding: 24px 48px; background: var(--leaf); color: var(--bg);
+    border: none; border-radius: 100px;
+    font-family: 'Manrope', sans-serif; font-weight: 600;
+    font-size: 16px; cursor: pointer;
+    letter-spacing: 0.02em; transition: all 0.3s;
+  }
+  .cta-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 0 12px rgba(130, 198, 155, 0.1), 0 20px 40px rgba(130, 198, 155, 0.3);
+  }
+  
+  footer {
+    padding: 60px 48px 40px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-dim); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  
+  @media (max-width: 900px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 120px 20px 60px; }
+    .hero-stats { display: none; }
+    .products, .sentinel-detail, .cameras, .forest-network, .responder-section, .architecture, .impact, .cta { padding: 80px 20px; }
+    .product-grid, .device-specs, .responder-specs, .camera-modes { grid-template-columns: 1fr; }
+    .device-spec.left, .device-spec.right { display: none; }
+    .device-render { transform: scale(0.8); }
+    .satellite, .beam { display: none; }
+    .drone-scene { height: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-mark"></div>
+    <span>ForestGuard</span>
+  </div>
+  <div class="nav-links">
+    <a href="#sentinel">Sentinel</a>
+    <a href="#cameras">Visión</a>
+    <a href="#network">Red</a>
+    <a href="#responder">Responder</a>
+    <a href="#architecture">Sistema</a>
+    <a href="#impact">Impacto</a>
+  </div>
+  <button class="nav-cta">Invertir</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  
+  <div class="hero-content">
+    <div class="eyebrow">
+      <span class="dot"></span>
+      <span>Detect · Respond · Protect</span>
+    </div>
+    
+    <div class="hero-badges">
+      <span class="badge"><span class="badge-icon"></span>Powered by Starlink</span>
+      <span class="badge"><span class="badge-icon green"></span>Edge AI</span>
+      <span class="badge"><span class="badge-icon gold"></span>100% Solar</span>
+    </div>
+    
+    <h1>
+      Detectar incendios en <em>minutos</em>.<br>
+      Responder en <em>segundos</em>.
+    </h1>
+    
+    <p class="hero-sub">
+      Una red global de sensores satelitales con IA que detecta focos en su fase de smoldering y despliega drones autónomos para apagarlos antes de que sean visibles. Salvamos bosques. Salvamos el mundo.
+    </p>
+    
+    <div class="hero-actions">
+      <button class="btn-primary">Ver el sistema</button>
+      <button class="btn-secondary"><span>▶</span><span>Mira la demo · 2 min</span></button>
+    </div>
+  </div>
+  
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">&lt;3min</div><div class="stat-label">Detección</div></div>
+    <div class="stat"><div class="stat-num">&lt;60s</div><div class="stat-label">Respuesta</div></div>
+    <div class="stat"><div class="stat-num">10y</div><div class="stat-label">Vida útil</div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <div class="section-label">El sistema completo</div>
+    <h2 class="section-title">Dos productos. Una misión.</h2>
+    <p class="section-sub">
+      ForestGuard se despliega en dos capas integradas. Sentinel detecta. Responder actúa. Juntos cambian el juego.
+    </p>
+    
+    <div class="product-grid">
+      
+      <div class="product-card sentinel">
+        <span class="product-tag">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--leaf);box-shadow:0 0 6px var(--leaf);"></span>
+          Año 1 · Disponible
+        </span>
+        <h3 class="product-name">Sentinel <em>One</em></h3>
+        <p class="product-tagline">
+          El nodo sensor satelital. Detección 24/7 con IA, alimentado por energía solar y conectado vía Starlink.
+        </p>
+        
+        <div class="product-features">
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/>
+            </svg>
+            <span><strong>Conexión Starlink</strong> en cada nodo · cobertura global</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+            <span><strong>Cámara multimodal</strong> · RGB diurna · IR nocturna · térmica con telemetría</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/>
+            </svg>
+            <span><strong>Sensores químicos</strong> · H₂ · CO · CO₂ · VOC · temp · humedad</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+            <span><strong>IA Edge on-device</strong> · detección en menos de 30 segundos</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/>
+            </svg>
+            <span><strong>100% solar</strong> · 10 años de operación sin mantenimiento</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="product-card responder">
+        <span class="product-tag">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:0 0 6px var(--ember);"></span>
+          Año 2 · En desarrollo
+        </span>
+        <h3 class="product-name">Forest<em>Responder</em></h3>
+        <p class="product-tagline">
+          Estación base con drones autónomos. Cuando Sentinel detecta, Responder ataca. Apaga focos antes de que crezcan.
+        </p>
+        
+        <div class="product-features">
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z"/>
+              <path d="M12 22V12M4 7l8 5 8-5"/>
+            </svg>
+            <span><strong>Estación base solar</strong> · 1 cada 5-10 km² · alberga 2-4 drones</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="6" cy="8" r="2"/><circle cx="18" cy="8" r="2"/>
+              <circle cx="6" cy="16" r="2"/><circle cx="18" cy="16" r="2"/>
+              <rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+            <span><strong>Dron autónomo</strong> · vuelo guiado por GPS + cámara del Sentinel</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2C12 2 6 8 6 14a6 6 0 0012 0c0-6-6-12-6-12z"/>
+            </svg>
+            <span><strong>Cápsula extintora</strong> · polvo ABC o gel ignífugo · cobertura 25m²</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 7v5l3 3"/>
+            </svg>
+            <span><strong>Despliegue en 60 segundos</strong> · llega antes de la primera llama</span>
+          </div>
+          <div class="feature-item">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span><strong>Override manual</strong> · operador confirma o cancela desde dashboard</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sentinel-detail" id="sentinel">
+  <div class="product-eyebrow">Sentinel One · Detección</div>
+  <h2 class="product-title-big">Conectado <em>al mundo</em>.</h2>
+  <p class="product-tagline-big">
+    Cada nodo lleva un módulo Starlink integrado. Cobertura global desde el día uno. No depende de torres celulares ni cables.
+  </p>
+  
+  <div class="device-render">
+    <div class="device-glow"></div>
+    
+    <div class="satellite">
+      <svg viewBox="0 0 64 64" fill="none">
+        <rect x="24" y="24" width="16" height="16" rx="2" fill="#5bb8ef" opacity="0.9"/>
+        <rect x="6" y="28" width="14" height="8" rx="1" fill="#5bb8ef" opacity="0.6"/>
+        <rect x="44" y="28" width="14" height="8" rx="1" fill="#5bb8ef" opacity="0.6"/>
+        <line x1="20" y1="32" x2="24" y2="32" stroke="#5bb8ef" stroke-width="1"/>
+        <line x1="40" y1="32" x2="44" y2="32" stroke="#5bb8ef" stroke-width="1"/>
+        <circle cx="32" cy="32" r="2" fill="#fff"/>
+      </svg>
+    </div>
+    <div class="beam"></div>
+    
+    <div class="device-spec left spec-1">
+      <span><span class="label sky">STARLINK</span><br>Conexión satelital directa</span>
+      <div class="line"></div>
+    </div>
+    <div class="device-spec right spec-1">
+      <div class="line"></div>
+      <span><span class="label">VISIÓN</span><br>RGB · IR · Térmica 360°</span>
+    </div>
+    <div class="device-spec left spec-2">
+      <span><span class="label">EDGE AI</span><br>Detección on-device 30s</span>
+      <div class="line"></div>
+    </div>
+    <div class="device-spec right spec-2">
+      <div class="line"></div>
+      <span><span class="label">SENSORES</span><br>H₂ · CO · CO₂ · VOC</span>
+    </div>
+    <div class="device-spec left spec-3">
+      <span><span class="label">AUTONOMÍA</span><br>10 años sin servicio</span>
+      <div class="line"></div>
+    </div>
+    <div class="device-spec right spec-3">
+      <div class="line"></div>
+      <span><span class="label">RESISTENCIA</span><br>IP67 · -30°C a +85°C</span>
+    </div>
+    <div class="device-spec left spec-4">
+      <span><span class="label">ENERGÍA</span><br>Panel solar 5W</span>
+      <div class="line"></div>
+    </div>
+    <div class="device-spec right spec-4">
+      <div class="line"></div>
+      <span><span class="label">PESO</span><br>340g · 18cm × 8cm</span>
+    </div>
+    
+    <div class="device-body">
+      <div class="device-top"><div class="device-lens"></div></div>
+      <div class="device-led"></div>
+      <div class="device-sensors">
+        <div class="sensor-dot"></div><div class="sensor-dot"></div><div class="sensor-dot"></div>
+        <div class="sensor-dot"></div><div class="sensor-dot"></div><div class="sensor-dot"></div>
+        <div class="sensor-dot"></div><div class="sensor-dot"></div><div class="sensor-dot"></div>
+      </div>
+      <div class="device-base"></div>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="device-specs">
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/>
+        </svg>
+        <div class="spec-name">Starlink Direct</div>
+        <div class="spec-detail">Conexión satelital<br>en cada nodo · global</div>
+      </div>
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        </svg>
+        <div class="spec-name">Visión 360°</div>
+        <div class="spec-detail">3 modos · RGB · IR<br>· térmica con telemetría</div>
+      </div>
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/>
+        </svg>
+        <div class="spec-name">Solar 24/7</div>
+        <div class="spec-detail">Cero mantenimiento<br>· operación perpetua</div>
+      </div>
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        </svg>
+        <div class="spec-name">IA Embebida</div>
+        <div class="spec-detail">Smoldering detection<br>· antes de la llama</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cameras" id="cameras">
+  <div class="cameras-header">
+    <div class="section-label">Visión multimodal</div>
+    <h2 class="section-title">Tres ojos. Una historia.</h2>
+    <p class="section-sub" style="margin-bottom: 0;">
+      Cada Sentinel One ve el bosque de tres formas distintas — durante el día, en plena oscuridad y a través del calor. El operador puede cambiar de modo en tiempo real desde el dashboard.
+    </p>
+  </div>
+  
+  <div class="camera-modes">
+    
+    <div class="camera-mode">
+      <div class="camera-preview preview-rgb">
+        <div class="camera-hud">
+          <div class="hud-top">
+            <span class="hud-tag">● REC · RGB · 4K</span>
+            <span class="hud-tag">FG-061</span>
+          </div>
+          <div class="hud-bottom">
+            <span>14:32:08 · UTC-3</span>
+            <span>41.13°S · 71.31°W</span>
+          </div>
+        </div>
+      </div>
+      <div class="camera-info">
+        <div class="camera-mode-name">Modo Diurno · RGB</div>
+        <div class="camera-mode-desc">
+          Cámara de alta resolución para identificación visual de columnas de humo, vegetación y actividad humana.
+        </div>
+        <span class="camera-tag"><span class="pulse"></span>4K · 360° pan-tilt-zoom</span>
+      </div>
+    </div>
+    
+    <div class="camera-mode">
+      <div class="camera-preview preview-ir">
+        <div class="camera-hud">
+          <div class="hud-top">
+            <span class="hud-tag">◐ NIGHT · IR-CUT</span>
+            <span class="hud-tag">FG-061</span>
+          </div>
+          <div class="hud-bottom">
+            <span>03:14:52 · UTC-3</span>
+            <span>LUX 0.001</span>
+          </div>
+        </div>
+      </div>
+      <div class="camera-info">
+        <div class="camera-mode-name">Modo Nocturno · IR</div>
+        <div class="camera-mode-desc">
+          Visión infrarroja con sensor IR-cut activable. Detección de movimiento y vigilancia 24 horas en oscuridad total.
+        </div>
+        <span class="camera-tag"><span class="pulse"></span>850nm · 80m alcance</span>
+      </div>
+    </div>
+    
+    <div class="camera-mode">
+      <div class="camera-preview preview-thermal">
+        <div class="camera-hud">
+          <div class="hud-top">
+            <span class="hud-tag">▲ THERMAL · LEPTON 3.5</span>
+            <span class="hud-tag">FG-061</span>
+          </div>
+          <div class="hud-bottom">
+            <span>14:32:08 · LIVE</span>
+            <span>RANGE -10°C → +400°C</span>
+          </div>
+        </div>
+        <div class="crosshair"></div>
+        <div class="thermal-temp">▲ 247°C</div>
+      </div>
+      <div class="camera-info">
+        <div class="camera-mode-name">Modo Térmico · FLIR</div>
+        <div class="camera-mode-desc">
+          Cámara térmica con telemetría puntual. El operador hace click en cualquier punto y obtiene temperatura precisa al instante.
+        </div>
+        <span class="camera-tag"><span class="pulse"></span>±2°C precisión · 160×120</span>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+<section class="forest-network" id="network">
+  <div class="forest-network-header">
+    <div class="section-label">Red en acción</div>
+    <h2 class="section-title">El bosque, en tiempo real.</h2>
+    <p class="section-sub">
+      Cada Sentinel ve en su radio de cobertura y comparte datos con sus vecinos. Cuando uno detecta una anomalía, los nodos cercanos triangulan la posición exacta del foco — antes de que se vea la primera columna de humo.
+    </p>
+  </div>
+  
+  <div class="forest-canvas">
+    
+    <div class="map-title">
+      <div class="map-title-eyebrow">Live Coverage · Bariloche Sector</div>
+      <div class="map-title-name">Sector Norte · 12.4 km²</div>
+    </div>
+    
+    <div class="map-metrics">
+      <div class="metric-row">
+        <span class="metric-label">Nodos activos</span>
+        <span class="metric-value">8 / 8</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Cobertura</span>
+        <span class="metric-value">100%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Riesgo</span>
+        <span class="metric-value alert">EXTREMO</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Foco T+</span>
+        <span class="metric-value alert">02:14</span>
+      </div>
+    </div>
+    
+    <!-- Triangulation lines from 3 nearest nodes to the fire -->
+    <div class="triangulation">
+      <svg viewBox="0 0 100 62.5" preserveAspectRatio="none">
+        <!-- Lines converging on fire at (62, 38) -->
+        <line x1="48" y1="28" x2="62" y2="38" stroke="rgba(255, 107, 53, 0.5)" stroke-width="0.15" stroke-dasharray="0.4 0.3"/>
+        <line x1="75" y1="22" x2="62" y2="38" stroke="rgba(255, 107, 53, 0.5)" stroke-width="0.15" stroke-dasharray="0.4 0.3"/>
+        <line x1="72" y1="52" x2="62" y2="38" stroke="rgba(255, 107, 53, 0.5)" stroke-width="0.15" stroke-dasharray="0.4 0.3"/>
+        
+        <!-- Mesh links between healthy nodes (subtle) -->
+        <line x1="18" y1="22" x2="32" y2="44" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+        <line x1="32" y1="44" x2="48" y2="28" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+        <line x1="18" y1="22" x2="48" y2="28" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+        <line x1="48" y1="28" x2="75" y2="22" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+        <line x1="32" y1="44" x2="42" y2="68" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+        <line x1="42" y1="68" x2="72" y2="52" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+        <line x1="72" y1="52" x2="86" y2="76" stroke="rgba(130, 198, 155, 0.15)" stroke-width="0.1" stroke-dasharray="0.3 0.4"/>
+      </svg>
+    </div>
+    
+    <!-- Sensor nodes (positioned by percentage) -->
+    <!-- Healthy nodes (green) -->
+    <div class="sensor-node" style="top: 18%; left: 18%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-001</div>
+    </div>
+    
+    <div class="sensor-node" style="top: 35%; left: 32%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-002</div>
+    </div>
+    
+    <!-- Warning node (closest to fire, detecting smoke) -->
+    <div class="sensor-node warning" style="top: 22%; left: 48%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-003 ⚠</div>
+    </div>
+    
+    <!-- Alert node (detecting fire) -->
+    <div class="sensor-node alert" style="top: 18%; left: 75%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-004 ▲</div>
+    </div>
+    
+    <div class="sensor-node" style="top: 55%; left: 42%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-005</div>
+    </div>
+    
+    <!-- Warning node (south of fire) -->
+    <div class="sensor-node warning" style="top: 42%; left: 72%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-006 ⚠</div>
+    </div>
+    
+    <div class="sensor-node" style="top: 75%; left: 28%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-007</div>
+    </div>
+    
+    <div class="sensor-node" style="top: 78%; left: 86%;">
+      <div class="ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="core"></div>
+      <div class="label">FG-008</div>
+    </div>
+    
+    <!-- Fire incident -->
+    <div class="fire-incident" style="top: 28%; left: 60%;">
+      <div class="fire-glow"></div>
+      <svg class="fire-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C12 2 6 8 6 14a6 6 0 0012 0c0-3-2-5-2-8 0 2-2 3-4 4z" opacity="0.95"/>
+      </svg>
+      <div class="fire-rings"></div>
+    </div>
+    
+    <!-- Compass -->
+    <div class="compass">
+      <div class="compass-arrow"></div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="map-legend">
+      <div class="legend-item">
+        <span class="legend-dot ok"></span>
+        <span>OK</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot warn"></span>
+        <span>HUMO</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot fire"></span>
+        <span>FUEGO</span>
+      </div>
+      <div class="legend-item">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="rgba(130, 198, 155, 0.4)" stroke-width="0.5" stroke-dasharray="1 1"/>
+        </svg>
+        <span>COBERTURA</span>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+<section class="responder-section" id="responder">
+  
+  <span class="responder-eyebrow">
+    <span class="dot"></span>
+    Forest Responder · Año 2
+  </span>
+  
+  <h2 class="responder-title">
+    No solo <em>detectamos</em>.<br>
+    También <em>actuamos</em>.
+  </h2>
+  
+  <p class="responder-tagline">
+    Drones autónomos que despegan en menos de 60 segundos cuando Sentinel detecta un foco. Llegan, lanzan, apagan. Sin esperar a que llegue una brigada.
+  </p>
+  
+  <div class="drone-scene">
+    
+    <div class="ground"></div>
+    
+    <div class="scene-label scene-label-1">▲ ALERTA · T+45s · Foco detectado</div>
+    <div class="scene-label scene-label-2">
+      DRONE FG-D01<br>
+      <div>Despliegue · Carga: 4kg ABC</div>
+    </div>
+    
+    <div class="base-station">
+      <div class="base-platform"></div>
+      <div class="base-tower"></div>
+      <div class="base-top"></div>
+      <div class="base-light"></div>
+      <div class="base-label">Base FG-B01</div>
+    </div>
+    
+    <div class="drone">
+      <div class="drone-arm tl"></div>
+      <div class="drone-arm tr"></div>
+      <div class="drone-arm bl"></div>
+      <div class="drone-arm br"></div>
+      <div class="drone-rotor tl"></div>
+      <div class="drone-rotor tr"></div>
+      <div class="drone-rotor bl"></div>
+      <div class="drone-rotor br"></div>
+      <div class="drone-body"></div>
+      <div class="drone-light"></div>
+    </div>
+    
+    <div class="trajectory">
+      <svg viewBox="0 0 100 200" preserveAspectRatio="none">
+        <path d="M 10,10 Q 50,80 90,180" stroke="rgba(255, 107, 53, 0.4)" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+      </svg>
+    </div>
+    
+    <div class="target">
+      <div class="target-glow"></div>
+      <div class="target-rings"></div>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="responder-specs">
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 7v5l3 3"/>
+        </svg>
+        <div class="spec-name">&lt; 60 segundos</div>
+        <div class="spec-detail">desde alerta hasta<br>despegue del dron</div>
+      </div>
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="12" cy="12" r="9"/>
+        </svg>
+        <div class="spec-name">Cobertura 25m²</div>
+        <div class="spec-detail">por cápsula extintora<br>· polvo ABC o gel</div>
+      </div>
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+        <div class="spec-name">2-4 drones</div>
+        <div class="spec-detail">por estación base<br>· recarga solar</div>
+      </div>
+      <div class="spec-cell">
+        <svg class="spec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <div class="spec-name">Vista guiada</div>
+        <div class="spec-detail">cámara del Sentinel<br>+ telemetría calculada</div>
+      </div>
+    </div>
+    
+    <div style="text-align: center;">
+      <span class="phase-badge">⚙ Roadmap · Lanzamiento previsto Q3 2027</span>
+    </div>
+  </div>
+</section>
+
+<section class="architecture" id="architecture">
+  <div class="container">
+    <div class="section-label">Arquitectura del sistema</div>
+    <h2 class="section-title">Una red, cuatro capas, infinita escala.</h2>
+  </div>
+  
+  <div class="arch-diagram">
+    <div class="arch-layer l1">L4 · ÓRBITA</div>
+    <div class="arch-layer l2">L3 · NUBE</div>
+    <div class="arch-layer l3">L2 · NODOS</div>
+    <div class="arch-layer l4">L1 · CAMPO</div>
+    
+    <div class="arch-satellite">
+      <svg viewBox="0 0 64 64" fill="none">
+        <rect x="24" y="24" width="16" height="16" rx="2" fill="#5bb8ef" opacity="0.9"/>
+        <rect x="6" y="28" width="14" height="8" rx="1" fill="#5bb8ef" opacity="0.6"/>
+        <rect x="44" y="28" width="14" height="8" rx="1" fill="#5bb8ef" opacity="0.6"/>
+        <line x1="20" y1="32" x2="24" y2="32" stroke="#5bb8ef" stroke-width="1"/>
+        <line x1="40" y1="32" x2="44" y2="32" stroke="#5bb8ef" stroke-width="1"/>
+        <circle cx="32" cy="32" r="2" fill="#fff"/>
+      </svg>
+    </div>
+    <div class="arch-label-text">STARLINK CONSTELLATION</div>
+    
+    <div class="arch-cloud">⬢ FORESTGUARD CLOUD · IA · DASHBOARD · API</div>
+    
+    <svg class="arch-connections" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <line x1="50" y1="22" x2="50" y2="32" stroke="rgba(91, 184, 239, 0.5)" stroke-width="0.2" stroke-dasharray="0.5 0.5"/>
+      <line x1="50" y1="38" x2="38" y2="58" stroke="rgba(130, 198, 155, 0.4)" stroke-width="0.2"/>
+      <line x1="50" y1="38" x2="50" y2="58" stroke="rgba(130, 198, 155, 0.4)" stroke-width="0.2"/>
+      <line x1="50" y1="38" x2="62" y2="58" stroke="rgba(130, 198, 155, 0.4)" stroke-width="0.2"/>
+      <line x1="38" y1="58" x2="50" y2="58" stroke="rgba(130, 198, 155, 0.5)" stroke-width="0.15" stroke-dasharray="0.3 0.3"/>
+      <line x1="50" y1="58" x2="62" y2="58" stroke="rgba(130, 198, 155, 0.5)" stroke-width="0.15" stroke-dasharray="0.3 0.3"/>
+      <line x1="38" y1="58" x2="38" y2="80" stroke="rgba(130, 198, 155, 0.3)" stroke-width="0.15"/>
+      <line x1="50" y1="58" x2="50" y2="80" stroke="rgba(130, 198, 155, 0.3)" stroke-width="0.15"/>
+      <line x1="62" y1="58" x2="62" y2="80" stroke="rgba(130, 198, 155, 0.3)" stroke-width="0.15"/>
+    </svg>
+    
+    <div class="arch-nodes">
+      <div class="arch-node"></div>
+      <div class="arch-node"></div>
+      <div class="arch-node"></div>
+    </div>
+    
+    <div class="arch-forest"></div>
+  </div>
+</section>
+
+<section class="impact" id="impact">
+  <div class="impact-num">2.8M</div>
+  <div class="impact-text">"hectáreas de bosque que podemos salvar para 2030."</div>
+  <div class="impact-detail">
+    Equivalente a evitar 1.1 mil millones de toneladas de CO₂ — el doble de las emisiones anuales de Argentina.
+  </div>
+</section>
+
+<section class="cta">
+  <h2 class="cta-title">Salvemos los bosques.<br><em>Salvemos el mundo.</em></h2>
+  <p class="cta-sub">
+    Buscamos co-fundadores, inversores ángel y partners estratégicos para escalar ForestGuard a una red global.
+  </p>
+  <button class="cta-btn">Hablemos →</button>
+</section>
+
+<footer>
+  <div>© 2026 ForestGuard · Built with purpose</div>
+  <div>Mission · Save the forests</div>
+</footer>
+
+</body>
+</html>
