@@ -1,17 +1,16 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export default function Landing() {
-  const [htmlContent, setHtmlContent] = useState<string>('');
-
-  useEffect(() => {
-    // Fetch the landing HTML from outputs
-    fetch('/forestguard-landing.html')
-      .then((res) => res.text())
-      .then((html) => setHtmlContent(html))
-      .catch((err) => console.error('Failed to load landing:', err));
-  }, []);
+  let htmlContent = '';
+  
+  try {
+    const filePath = join(process.cwd(), 'public', 'forestguard-landing.html');
+    htmlContent = readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    console.error('Failed to load landing HTML:', error);
+    htmlContent = '<div>Error loading landing page</div>';
+  }
 
   return (
     <div

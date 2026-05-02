@@ -1,17 +1,16 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export default function Dashboard() {
-  const [htmlContent, setHtmlContent] = useState<string>('');
-
-  useEffect(() => {
-    // Fetch the dashboard HTML from outputs
-    fetch('/forestguard-dashboard.html')
-      .then((res) => res.text())
-      .then((html) => setHtmlContent(html))
-      .catch((err) => console.error('Failed to load dashboard:', err));
-  }, []);
+  let htmlContent = '';
+  
+  try {
+    const filePath = join(process.cwd(), 'public', 'forestguard-dashboard.html');
+    htmlContent = readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    console.error('Failed to load dashboard HTML:', error);
+    htmlContent = '<div>Error loading dashboard</div>';
+  }
 
   return (
     <div
