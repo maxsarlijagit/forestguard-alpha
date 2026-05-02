@@ -1,6 +1,5 @@
 {
-  "buildCommand": "exit 0",
-  "outputDirectory": ".",
-  "public": true,
-  "trailingSlash": false
+  "buildCommand": "mkdir -p public && cp *.html public/ 2>/dev/null; echo 'Static copy done'",
+  "outputDirectory": "public",
+  "public": true
 }
