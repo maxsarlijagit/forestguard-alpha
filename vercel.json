@@ -1,5 +1,3 @@
 {
-  "buildCommand": "echo 'Static HTML deployment'",
-  "outputDirectory": ".",
-  "trailingSlash": false
+  "public": true
 }
